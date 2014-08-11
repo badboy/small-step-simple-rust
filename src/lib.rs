@@ -5,6 +5,7 @@
 
 extern crate std;
 
+use std::fmt::Show;
 use std::fmt::Formatter;
 use std::fmt::Result;
 use std::collections::hashmap::HashMap;
@@ -18,11 +19,12 @@ pub enum Element {
     Boolean(bool),
     LessThan(Box<Element>, Box<Element>),
     Variable(String),
+    Assign(String, Box<Element>),
     DoNothing
 }
 
-impl std::fmt::Show for Element {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Show for Element {
+    fn fmt(&self, f: &mut Formatter) -> Result {
         match *self {
             Number(ref value) => write!(f, "{}", value),
             Add(ref l, ref r) => write!(f, "{} + {}", l, r),
