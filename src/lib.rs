@@ -32,6 +32,7 @@ impl Show for Element {
             LessThan(ref l, ref r) => write!(f, "{} < {}", l, r),
             Boolean(ref b) => write!(f, "{}", b),
             Variable(ref value) => write!(f, "{}", value),
+            Assign(ref name, ref val) => write!(f, "{} = {}", name, val),
             DoNothing => write!(f, "do-nothing")
         }
     }
@@ -47,6 +48,7 @@ impl Element {
             Multiply(_, _) => true,
             LessThan(_, _) => true,
             Variable(_) => true,
+            Assign(_, _) => true,
         }
     }
 
@@ -128,6 +130,11 @@ macro_rules! less_than(
 macro_rules! variable(
     ($v:expr) => (
         box Variable($v.to_string())
+    );
+)
+macro_rules! assign(
+    ($name:expr, $exp:expr) => (
+        box Assign($name.to_string(), $exp)
     );
 )
 
@@ -285,4 +292,12 @@ fn test_machine_reduces_with_variables() {
 
     let exp = exp.reduce(&mut env);
     assert_eq!("7".to_string(), format!("{}", exp));
+}
+
+#[test]
+fn test_assignment_initializer() {
+    let assignment = assign!("x", number!(1));
+
+    assert_eq!("x = 1".to_string(), format!("{}", assignment));
+    assert_eq!(true, assignment.is_reducible());
 }
