@@ -64,6 +64,8 @@ pub enum Element {
     /// A if-else block. Condition needs to reduce to a Boolean. No type checking.
     /// If `condition` reduces to true, the `consequence` is used furhter, otherwise the `alternative`
     IfElse(Box<Element>, Box<Element>, Box<Element>),
+    /// A while loop. Runs until the `condition` reduces to false.
+    While(Box<Element>, Box<Element>),
     /// A simple no-op statement.
     DoNothing
 }
@@ -119,6 +121,11 @@ macro_rules! if_(
         box IfElse($condition, $consequence, box DoNothing)
     );
 )
+macro_rules! while_(
+    ($condition:expr, $body:expr) => (
+        box While($condition, $body)
+    );
+)
 
 
 impl Show for Element {
@@ -135,6 +142,9 @@ impl Show for Element {
             Sequence(ref first, ref second) => write!(f, "{}; {}", first, second),
             IfElse(ref cond, ref cons, ref alt) => {
                 write!(f, "if ({}) [ {} ] else [ {} ]", cond, cons, alt)
+            }
+            While(ref cond, ref body) => {
+                write!(f, "while ({}) [ {} ]", cond, body)
             }
             DoNothing => write!(f, "do-nothing")
         }
@@ -155,13 +165,18 @@ impl Element {
             Assign(_, _) => true,
             Sequence(_, _) => true,
             IfElse(_, _, _) => true,
+            While(_, _) => true,
         }
     }
 
-    /// Get the actual value of a Number. Fails for other elements than Number.
+    /// Get the actual value of a Number.
+    /// Fails for other elements than Number and Boolean.
+    /// Boolean maps to Integers: true=1, false=0.
     pub fn value(&self) -> i64 {
         match *self {
             Number(val) => val,
+            Boolean(true) => 1,
+            Boolean(false) => 0,
             _ => fail!("type mismatch in value")
         }
     }
@@ -231,6 +246,9 @@ impl Element {
                     fail!("Condition in if not reducible (but not bool): {}", cond)
                 }
             },
+            While(ref cond, ref body) => {
+                IfElse(cond.clone(), box Sequence(body.clone(), box self.clone()), box DoNothing)
+            }
             DoNothing => { DoNothing }
             _ => fail!("type mismatch in reduce: {}", *self)
         }
@@ -540,4 +558,82 @@ fn test_if_without_else () {
 
     let if_block = if_block.reduce(&mut env);
     assert_eq!("1".to_string(), format!("{}", if_block));
+}
+
+#[test]
+fn test_expression_with_assignment_and_if() {
+    let env = HashMap::new();
+
+    let mut m = Machine::new(
+        sequence!(
+            assign!("x", boolean!(false)),
+            ifelse!(
+                variable!("x"),
+                assign!("y", number!(1)),
+                assign!("y", number!(42))
+            )
+            ),
+            env
+        );
+
+    m.run();
+
+    let env = m.clone_env();
+
+    assert_eq!(0, env.get(&"x".to_string()).value());
+    assert_eq!(42, env.get(&"y".to_string()).value());
+}
+
+#[test]
+fn test_while_loops () {
+    let mut env = HashMap::new();
+    env.insert("x".to_string(), number!(1));
+
+    let while_loop = while_!(
+        less_than!(variable!("x"), number!(2)),
+        assign!("x", add!(variable!("x"), number!(1)))
+        );
+    //  1. while (x < 2) [ x = x + 1 ]
+    //  2. if (x < 2) [ x = x +1 ; while (x < 2) [ x = x + 1 ] ] else [ do-nothing ];
+    //  3. if (1 < 2) [ x = x +1 ; while (x < 2) [ x = x + 1 ] ] else [ do-nothing ];
+    //  4. if (true) [ x = x +1 ; while (x < 2) [ x = x + 1 ] ] else [ do-nothing ];
+    //  5. x = x + 1; while (x < 2) [ x = x + 1 ]
+    //  6. x = 1 + 1; while (x < 2) [ x = x + 1 ]
+    //  7. x = 2; while (x < 2) [ x = x + 1 ]
+    //  8. do-nothing; while (x < 2) [ x = x + 1 ]
+    //  9. while (x < 2) [ x = x + 1 ]
+    // 10. if (x < 2) [ x = x +1 ; while (x < 2) [ x = x + 1 ] ] else [ do-nothing ];
+    // 11. if (2 < 2) [ x = x +1 ; while (x < 2) [ x = x + 1 ] ] else [ do-nothing ];
+    // 12. if (false) [ x = x +1 ; while (x < 2) [ x = x + 1 ] ] else [ do-nothing ];
+    // 13. do-nothing
+
+
+    assert_eq!(true, while_loop.is_reducible());
+    assert_eq!("while (x < 2) [ x = x + 1 ]".to_string(), format!("{}", while_loop));
+
+    let while_loop = while_loop.reduce(&mut env);
+    assert_eq!(
+        "if (x < 2) [ x = x + 1; while (x < 2) [ x = x + 1 ] ] else [ do-nothing ]".to_string(),
+        format!("{}", while_loop));
+}
+
+#[test]
+fn test_while_loops_fully_with_machine () {
+    let mut env = HashMap::new();
+    env.insert("x".to_string(), number!(1));
+
+    //  1. while (x < 5) [ x = x * 3 ]
+    let mut m = Machine::new(
+        while_!(
+            less_than!(variable!("x"), number!(5)),
+            assign!("x", multiply!(variable!("x"), number!(3)))
+            ),
+            env
+            );
+
+    m.run();
+
+    let env = m.clone_env();
+
+    assert_eq!(9, env.get(&"x".to_string()).value());
 }
