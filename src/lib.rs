@@ -125,7 +125,7 @@ macro_rules! less_than(
 )
 macro_rules! variable(
     ($v:expr) => (
-        box Variable($v)
+        box Variable($v.to_string())
     );
 )
 
@@ -182,13 +182,20 @@ fn test_expression_reduces() {
     assert_eq!(false, red.is_reducible())
 }
 
-pub struct Machine<'a> {
+pub struct Machine {
     expression: Box<Element>,
     environment: HashMap<String, Box<Element>>
 }
 
-impl<'a> Machine<'a> {
-    pub fn new<'a>(expression: Box<Element>) -> Machine<'a> {
+impl Machine {
+    pub fn new(expression: Box<Element>, map: HashMap<String, Box<Element>>) -> Machine {
+        Machine {
+            expression: expression,
+            environment: map
+        }
+    }
+
+    pub fn new_with_empty_env(expression: Box<Element>) -> Machine {
         let map: HashMap<String, Box<Element>> = HashMap::new();
         Machine {
             expression: expression,
@@ -213,7 +220,7 @@ impl<'a> Machine<'a> {
 #[test]
 fn test_machine_reduces_algebraic_expression() {
     println!("Starting the machine…");
-    let mut m = Machine::new(
+    let mut m = Machine::new_with_empty_env(
         multiply!(
             add!(number!(3), number!(4)),
             number!(2)
@@ -247,4 +254,33 @@ fn test_instantiate_variable_expression() {
     empty_env.insert("x".to_string(), number!(1));
     let v = v.reduce(&mut empty_env);
     assert_eq!("1".to_string(), format!("{}", v));
+}
+
+#[test]
+fn test_machine_reduces_with_variables() {
+    let mut env = HashMap::new();
+    env.insert("x".to_string(), number!(3));
+    env.insert("y".to_string(), number!(4));
+
+    let mut m = Machine::new(
+        add!(variable!("x"), variable!("y")),
+        env);
+
+
+    m.run();
+
+    let mut env = HashMap::new();
+    env.insert("x".to_string(), number!(3));
+    env.insert("y".to_string(), number!(4));
+
+    let exp = add!(variable!("x"), variable!("y"));
+    assert_eq!("x + y".to_string(), format!("{}", exp));
+    let exp = exp.reduce(&mut env);
+    assert_eq!("3 + y".to_string(), format!("{}", exp));
+
+    let exp = exp.reduce(&mut env);
+    assert_eq!("3 + 4".to_string(), format!("{}", exp));
+
+    let exp = exp.reduce(&mut env);
+    assert_eq!("7".to_string(), format!("{}", exp));
 }
