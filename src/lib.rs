@@ -1,7 +1,34 @@
 #![crate_name = "small_step_simple"]
 #![crate_type = "lib"]
 
+//! This is an implementation of the small-step approach to the SIMPLE language as introduced by
+//! [Tom Stuart](https://twitter.com/tomstuart) in "Understanding Computation", Chapter 1, "The Meaning of Programs".
+//! See his website: <http://computationbook.com/>.
+//!
+//! The usage is pretty simple. As there is no parser for SIMPLE (yet?) you have to write the AST
+//! yourself. A few macros are provided for easy access. You can then create a virtual machine and
+//! pass this AST plus an environment hash. When calling `run`, the machine steps through the code,
+//! reducing it until it reaches a point where no further reduction is possible.
+//!
+//! ```
+//! let mut env = HashMap::new();
+//! env.insert("y".to_string(), number!(1));
+//!
+//! let mut m = Machine::new(
+//!     sequence!(
+//!         assign!("x", number!(3)),
+//!         assign!("res", add!(add!(number!(38), variable!("x")), variable!("y")))
+//!         ),
+//!         env
+//!     );
+//!
+//! m.run();
+//! // Add this point `res` in the HashMap will be `Number(42)`
+//! ```
+
 #![feature(macro_rules)]
+#[macro_escape]
+
 
 extern crate std;
 
@@ -10,21 +37,76 @@ use std::fmt::Formatter;
 use std::fmt::Result;
 use std::collections::hashmap::HashMap;
 
-
+/// Our AST elements.
 #[deriving(Clone,PartialEq)]
 pub enum Element {
+    /// A simple number object, this cannot be reduced further.
     Number(i64),
+    /// An addition of two elements.
     Add(Box<Element>, Box<Element>),
+    /// A multiplication of two elements.
     Multiply(Box<Element>, Box<Element>),
+    /// A simple boolean object, this cannot be reduced further.
     Boolean(bool),
+    /// A less-than relation check of two elements. Elements should reduce to a number to be
+    /// comparable.
     LessThan(Box<Element>, Box<Element>),
+    /// A variable, will be replaced by its value when reducing.
     Variable(String),
+    /// A variable assignment. Only completely reduced values are assigned. No type checks.
     Assign(String, Box<Element>),
+    /// A sequence of two elements. The first element is reduced completely before the second is
+    /// touched.
     Sequence(Box<Element>, Box<Element>),
+    /// A simple no-op statement.
     DoNothing
 }
 
+/// Macros to create boxed AST elements.
+macro_rules! number(
+    ($val:expr) => (
+        box Number($val)
+    );
+)
+macro_rules! add(
+    ($l:expr, $r:expr) => (
+        box Add($l, $r)
+    );
+)
+macro_rules! multiply(
+    ($l:expr, $r:expr) => (
+        box Multiply($l, $r)
+    );
+)
+macro_rules! boolean(
+    ($val:expr) => (
+        box Boolean($val)
+    );
+)
+macro_rules! less_than(
+    ($l:expr, $r:expr) => (
+        box LessThan($l, $r)
+    );
+)
+macro_rules! variable(
+    ($v:expr) => (
+        box Variable($v.to_string())
+    );
+)
+macro_rules! assign(
+    ($name:expr, $exp:expr) => (
+        box Assign($name.to_string(), $exp)
+    );
+)
+macro_rules! sequence(
+    ($first:expr, $second:expr) => (
+        box Sequence($first, $second)
+    );
+)
+
+
 impl Show for Element {
+    /// Output a user-readable representation of the expression
     fn fmt(&self, f: &mut Formatter) -> Result {
         match *self {
             Number(ref value) => write!(f, "{}", value),
@@ -41,6 +123,7 @@ impl Show for Element {
 }
 
 impl Element {
+    /// Wether or not an expression is reducible. See Element for more info.
     pub fn is_reducible(&self) -> bool {
         match *self {
             Number(_) => false,
@@ -55,6 +138,7 @@ impl Element {
         }
     }
 
+    /// Get the actual value of a Number. Fails for other elements than Number.
     pub fn value(&self) -> i64 {
         match *self {
             Number(val) => val,
@@ -62,6 +146,7 @@ impl Element {
         }
     }
 
+    /// Reduce the expression according to the rules for the current element.
     pub fn reduce(&self, environment: &mut HashMap<String, Box<Element>>) -> Element {
         match *self {
             Add(ref l, ref r) => {
@@ -119,48 +204,6 @@ impl Element {
     }
 }
 
-
-macro_rules! number(
-    ($val:expr) => (
-        box Number($val)
-    );
-)
-macro_rules! add(
-    ($l:expr, $r:expr) => (
-        box Add($l, $r)
-    );
-)
-macro_rules! multiply(
-    ($l:expr, $r:expr) => (
-        box Multiply($l, $r)
-    );
-)
-macro_rules! boolean(
-    ($val:expr) => (
-        box Boolean($val)
-    );
-)
-macro_rules! less_than(
-    ($l:expr, $r:expr) => (
-        box LessThan($l, $r)
-    );
-)
-macro_rules! variable(
-    ($v:expr) => (
-        box Variable($v.to_string())
-    );
-)
-macro_rules! assign(
-    ($name:expr, $exp:expr) => (
-        box Assign($name.to_string(), $exp)
-    );
-)
-macro_rules! sequence(
-    ($first:expr, $second:expr) => (
-        box Sequence($first, $second)
-    );
-)
-
 #[test]
 fn test_types_are_creatable() {
     let i = number!(3);
@@ -214,12 +257,14 @@ fn test_expression_reduces() {
     assert_eq!(false, red.is_reducible())
 }
 
+/// Our virtual machine, executing our constructed AST step-by-step
 pub struct Machine {
     expression: Box<Element>,
     environment: HashMap<String, Box<Element>>
 }
 
 impl Machine {
+    /// Create a new machine with a given expression and an environment
     pub fn new(expression: Box<Element>, map: HashMap<String, Box<Element>>) -> Machine {
         Machine {
             expression: expression,
@@ -227,6 +272,7 @@ impl Machine {
         }
     }
 
+    /// Create a new machine with a given expression and an _empty_ environment
     pub fn new_with_empty_env(expression: Box<Element>) -> Machine {
         let map: HashMap<String, Box<Element>> = HashMap::new();
         Machine {
@@ -235,14 +281,18 @@ impl Machine {
         }
     }
 
+    /// As the environment is passed in immutable, we need to clone it to get it back
     pub fn clone_env(&self) -> HashMap<String, Box<Element>> {
         self.environment.clone()
     }
 
+    /// Reduce one step of our current expression
     pub fn step(&mut self) {
         self.expression = box self.expression.reduce(&mut self.environment)
     }
 
+    /// Reduce until we reached a non-reducible expression.
+    /// This prints the current expression before each step.
     pub fn run(&mut self) {
         while self.expression.is_reducible() {
             println!("{}", self.expression);
