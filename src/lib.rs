@@ -20,6 +20,7 @@ pub enum Element {
     LessThan(Box<Element>, Box<Element>),
     Variable(String),
     Assign(String, Box<Element>),
+    Sequence(Box<Element>, Box<Element>),
     DoNothing
 }
 
@@ -33,6 +34,7 @@ impl Show for Element {
             Boolean(ref b) => write!(f, "{}", b),
             Variable(ref value) => write!(f, "{}", value),
             Assign(ref name, ref val) => write!(f, "{} = {}", name, val),
+            Sequence(ref first, ref second) => write!(f, "{}; {}", first, second),
             DoNothing => write!(f, "do-nothing")
         }
     }
@@ -49,6 +51,7 @@ impl Element {
             LessThan(_, _) => true,
             Variable(_) => true,
             Assign(_, _) => true,
+            Sequence(_, _) => true,
         }
     }
 
@@ -104,7 +107,14 @@ impl Element {
                     DoNothing
                 }
             },
-            _ => fail!("type mismatch in reduce")
+            Sequence(box DoNothing, ref second) => {
+                *second.clone()
+            },
+            Sequence(ref first, ref second) => {
+                Sequence(box first.reduce(environment), second.clone())
+            },
+            DoNothing => { DoNothing }
+            _ => fail!("type mismatch in reduce: {}", *self)
         }
     }
 }
@@ -143,6 +153,11 @@ macro_rules! variable(
 macro_rules! assign(
     ($name:expr, $exp:expr) => (
         box Assign($name.to_string(), $exp)
+    );
+)
+macro_rules! sequence(
+    ($first:expr, $second:expr) => (
+        box Sequence($first, $second)
     );
 )
 
@@ -320,4 +335,26 @@ fn test_assigment_is_reduced() {
     let val = env.get(&"x".to_string());
     assert_eq!(DoNothing, assignment);
     assert_eq!(1, (*val).value());
+}
+
+#[test]
+fn test_sequence_is_reduced() {
+    let sequence = sequence!(
+        box DoNothing,
+        add!(number!(1), number!(2))
+        );
+
+    // do-nothing; 1 + 1
+    // 1 + 1
+    // 3
+
+    let mut env = HashMap::new();
+
+    let mut stderr = io::stderr();
+
+    assert_eq!(true, sequence.is_reducible());
+    let sequence = sequence.reduce(&mut env);
+    assert_eq!(true, sequence.is_reducible());
+    let sequence = sequence.reduce(&mut env);
+    assert_eq!(false, sequence.is_reducible());
 }
