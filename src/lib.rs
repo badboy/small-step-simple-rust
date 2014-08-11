@@ -404,8 +404,6 @@ fn test_sequence_is_reduced() {
 
     let mut env = HashMap::new();
 
-    let mut stderr = io::stderr();
-
     assert_eq!(true, sequence.is_reducible());
     let sequence = sequence.reduce(&mut env);
     assert_eq!(true, sequence.is_reducible());
@@ -416,12 +414,12 @@ fn test_sequence_is_reduced() {
 #[test]
 fn test_expression_with_assignment_and_variables_runs() {
     let mut env = HashMap::new();
-    env.insert("y".to_string(), number!(2));
+    env.insert("y".to_string(), number!(1));
 
     let mut m = Machine::new(
         sequence!(
-            assign!("x", number!(2)),
-            assign!("res", add!(add!(number!(42), variable!("x")), variable!("y")))
+            assign!("x", number!(3)),
+            assign!("res", add!(add!(number!(38), variable!("x")), variable!("y")))
             ),
             env
         );
@@ -430,7 +428,7 @@ fn test_expression_with_assignment_and_variables_runs() {
 
     let env = m.clone_env();
 
-    assert_eq!(2, env.get(&"y".to_string()).value());
-    assert_eq!(2, env.get(&"x".to_string()).value());
-    assert_eq!(46, env.get(&"res".to_string()).value());
+    assert_eq!(1, env.get(&"y".to_string()).value());
+    assert_eq!(3, env.get(&"x".to_string()).value());
+    assert_eq!(42, env.get(&"res".to_string()).value());
 }
