@@ -32,8 +32,6 @@
 //! at all (this is my first Rust code larger than a simple "Hello World")
 
 #![feature(macro_rules)]
-#[macro_escape]
-
 
 extern crate std;
 
@@ -63,6 +61,9 @@ pub enum Element {
     /// A sequence of two elements. The first element is reduced completely before the second is
     /// touched.
     Sequence(Box<Element>, Box<Element>),
+    /// A if-else block. Condition needs to reduce to a Boolean. No type checking.
+    /// If `condition` reduces to true, the `consequence` is used furhter, otherwise the `alternative`
+    IfElse(Box<Element>, Box<Element>, Box<Element>),
     /// A simple no-op statement.
     DoNothing
 }
@@ -108,6 +109,16 @@ macro_rules! sequence(
         box Sequence($first, $second)
     );
 )
+macro_rules! ifelse(
+    ($condition:expr, $consequence:expr, $alternative:expr) => (
+        box IfElse($condition, $consequence, $alternative)
+    );
+)
+macro_rules! if_(
+    ($condition:expr, $consequence:expr) => (
+        box IfElse($condition, $consequence, box DoNothing)
+    );
+)
 
 
 impl Show for Element {
@@ -122,6 +133,9 @@ impl Show for Element {
             Variable(ref value) => write!(f, "{}", value),
             Assign(ref name, ref val) => write!(f, "{} = {}", name, val),
             Sequence(ref first, ref second) => write!(f, "{}; {}", first, second),
+            IfElse(ref cond, ref cons, ref alt) => {
+                write!(f, "if ({}) [ {} ] else [ {} ]", cond, cons, alt)
+            }
             DoNothing => write!(f, "do-nothing")
         }
     }
@@ -140,6 +154,7 @@ impl Element {
             Variable(_) => true,
             Assign(_, _) => true,
             Sequence(_, _) => true,
+            IfElse(_, _, _) => true,
         }
     }
 
@@ -202,6 +217,19 @@ impl Element {
             },
             Sequence(ref first, ref second) => {
                 Sequence(box first.reduce(environment), second.clone())
+            },
+            IfElse(box Boolean(true), ref cons, _) => {
+                *cons.clone()
+            },
+            IfElse(box Boolean(false), _, ref alt) => {
+                *alt.clone()
+            },
+            IfElse(ref cond, ref cons, ref alt) => {
+                if cond.is_reducible() {
+                    IfElse(box cond.reduce(environment), cons.clone(), alt.clone())
+                } else {
+                    fail!("Condition in if not reducible (but not bool): {}", cond)
+                }
             },
             DoNothing => { DoNothing }
             _ => fail!("type mismatch in reduce: {}", *self)
@@ -436,4 +464,80 @@ fn test_expression_with_assignment_and_variables_runs() {
     assert_eq!(1, env.get(&"y".to_string()).value());
     assert_eq!(3, env.get(&"x".to_string()).value());
     assert_eq!(42, env.get(&"res".to_string()).value());
+}
+
+#[test]
+fn test_if_is_reduced_true () {
+    let mut env = HashMap::new();
+    let if_block = ifelse!(
+        boolean!(true),
+        number!(1),
+        number!(2)
+        );
+    // if(true) [ 1 ] else [ 2 ]
+    // 1
+
+
+    assert_eq!(true, if_block.is_reducible());
+    assert_eq!("if (true) [ 1 ] else [ 2 ]".to_string(), format!("{}", if_block));
+
+    let if_block = if_block.reduce(&mut env);
+    assert_eq!("1".to_string(), format!("{}", if_block));
+}
+
+#[test]
+fn test_if_is_reduced_false () {
+    let mut env = HashMap::new();
+    let if_block = ifelse!(
+        boolean!(false),
+        number!(1),
+        number!(2)
+        );
+    // if(true) [ 1 ] else [ 2 ]
+    // 2
+
+
+    assert_eq!(true, if_block.is_reducible());
+    assert_eq!("if (false) [ 1 ] else [ 2 ]".to_string(), format!("{}", if_block));
+
+    let if_block = if_block.reduce(&mut env);
+    assert_eq!("2".to_string(), format!("{}", if_block));
+}
+
+#[test]
+fn test_if_is_reduced_with_expression () {
+    let mut env = HashMap::new();
+    let if_block = ifelse!(
+        less_than!(number!(1), number!(2)),
+        number!(1),
+        number!(2)
+        );
+    // if(1 < 2) [ 1 ] else [ 2 ]
+    // if(true) [ 1 ] else [ 2 ]
+    // 1
+
+
+    assert_eq!(true, if_block.is_reducible());
+    assert_eq!("if (1 < 2) [ 1 ] else [ 2 ]".to_string(), format!("{}", if_block));
+
+    let if_block = if_block.reduce(&mut env);
+    assert_eq!("if (true) [ 1 ] else [ 2 ]".to_string(), format!("{}", if_block));
+
+    let if_block = if_block.reduce(&mut env);
+    assert_eq!("1".to_string(), format!("{}", if_block));
+}
+
+#[test]
+fn test_if_without_else () {
+    let mut env = HashMap::new();
+    let if_block = if_!(boolean!(true), number!(1));
+    // if(true) [ 1 ] else [ do-nothing ]
+    // 1
+
+
+    assert_eq!(true, if_block.is_reducible());
+    assert_eq!("if (true) [ 1 ] else [ do-nothing ]".to_string(), format!("{}", if_block));
+
+    let if_block = if_block.reduce(&mut env);
+    assert_eq!("1".to_string(), format!("{}", if_block));
 }
