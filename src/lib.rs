@@ -25,6 +25,11 @@
 //! m.run();
 //! // Add this point `res` in the HashMap will be `Number(42)`
 //! ```
+//!
+//!
+//! The code is much larger as the equivalent Ruby code. This is both due to the restricitions
+//! of Rust (explicit types and everything, a good thing) and my non-existing experience with Rust
+//! at all (this is my first Rust code larger than a simple "Hello World")
 
 #![feature(macro_rules)]
 #[macro_escape]
