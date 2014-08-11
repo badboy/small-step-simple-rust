@@ -235,6 +235,10 @@ impl Machine {
         }
     }
 
+    pub fn clone_env(&self) -> HashMap<String, Box<Element>> {
+        self.environment.clone()
+    }
+
     pub fn step(&mut self) {
         self.expression = box self.expression.reduce(&mut self.environment)
     }
@@ -357,4 +361,26 @@ fn test_sequence_is_reduced() {
     assert_eq!(true, sequence.is_reducible());
     let sequence = sequence.reduce(&mut env);
     assert_eq!(false, sequence.is_reducible());
+}
+
+#[test]
+fn test_expression_with_assignment_and_variables_runs() {
+    let mut env = HashMap::new();
+    env.insert("y".to_string(), number!(2));
+
+    let mut m = Machine::new(
+        sequence!(
+            assign!("x", number!(2)),
+            assign!("res", add!(add!(number!(42), variable!("x")), variable!("y")))
+            ),
+            env
+        );
+
+    m.run();
+
+    let env = m.clone_env();
+
+    assert_eq!(2, env.get(&"y".to_string()).value());
+    assert_eq!(2, env.get(&"x".to_string()).value());
+    assert_eq!(46, env.get(&"res".to_string()).value());
 }
