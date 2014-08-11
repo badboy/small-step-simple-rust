@@ -1,9 +1,14 @@
+#![crate_name = "small_step_simple"]
+#![crate_type = "lib"]
+
 #![feature(macro_rules)]
 
 extern crate std;
 
 use std::fmt::Formatter;
 use std::fmt::Result;
+use std::collections::hashmap::HashMap;
+
 
 #[deriving(Clone)]
 pub enum Element {
@@ -12,6 +17,7 @@ pub enum Element {
     Multiply(Box<Element>, Box<Element>),
     Boolean(bool),
     LessThan(Box<Element>, Box<Element>),
+    Variable(String),
     DoNothing
 }
 
@@ -23,6 +29,7 @@ impl std::fmt::Show for Element {
             Multiply(ref l, ref r) => write!(f, "{} * {}", l, r),
             LessThan(ref l, ref r) => write!(f, "{} < {}", l, r),
             Boolean(ref b) => write!(f, "{}", b),
+            Variable(ref value) => write!(f, "{}", value),
             DoNothing => write!(f, "do-nothing")
         }
     }
@@ -37,6 +44,7 @@ impl Element {
             Add(_, _) => true,
             Multiply(_, _) => true,
             LessThan(_, _) => true,
+            Variable(_) => true,
         }
     }
 
@@ -47,35 +55,43 @@ impl Element {
         }
     }
 
-    pub fn reduce(&self) -> Element {
+    pub fn reduce(&self, environment: &mut HashMap<String, Box<Element>>) -> Element {
         match *self {
             Add(ref l, ref r) => {
                 if l.is_reducible() {
-                    Add(box l.reduce(), r.clone())
+                    Add(box l.reduce(environment), r.clone())
                 } else if r.is_reducible() {
-                    Add(l.clone(), box r.reduce())
+                    Add(l.clone(), box r.reduce(environment))
                 } else {
                     Number(l.value() + r.value())
                 }
             },
             Multiply(ref l, ref r) => {
                 if l.is_reducible() {
-                    Multiply(box l.reduce(), r.clone())
+                    Multiply(box l.reduce(environment), r.clone())
                 } else if r.is_reducible() {
-                    Multiply(l.clone(), box r.reduce())
+                    Multiply(l.clone(), box r.reduce(environment))
                 } else {
                     Number(l.value() * r.value())
                 }
             },
             LessThan(ref l, ref r) => {
                 if l.is_reducible() {
-                    LessThan(box l.reduce(), r.clone())
+                    LessThan(box l.reduce(environment), r.clone())
                 } else if r.is_reducible() {
-                    LessThan(l.clone(), box r.reduce())
+                    LessThan(l.clone(), box r.reduce(environment))
                 } else {
                     Boolean(l.value() < r.value())
                 }
             },
+            Variable(ref v) => {
+                match environment.find(v) {
+                    Some(v) => {
+                        *v.clone()
+                    },
+                    None => DoNothing
+                }
+            }
             _ => fail!("type mismatch in reduce")
         }
     }
@@ -105,6 +121,11 @@ macro_rules! boolean(
 macro_rules! less_than(
     ($l:expr, $r:expr) => (
         box LessThan($l, $r)
+    );
+)
+macro_rules! variable(
+    ($v:expr) => (
+        box Variable($v)
     );
 )
 
@@ -150,27 +171,33 @@ fn test_expression_reduces() {
         multiply!(number!(3), number!(4))
     );
 
+    let mut empty_env = HashMap::new();
     assert_eq!("1 * 2 + 3 * 4".to_string(), format!("{}", expression));
-    let red = expression.reduce();
+    let red = expression.reduce(&mut empty_env);
     assert_eq!("2 + 3 * 4".to_string(), format!("{}", red));
-    let red = red.reduce();
+    let red = red.reduce(&mut empty_env);
     assert_eq!("2 + 12".to_string(), format!("{}", red));
-    let red = red.reduce();
+    let red = red.reduce(&mut empty_env);
     assert_eq!("14".to_string(), format!("{}", red));
     assert_eq!(false, red.is_reducible())
 }
 
-pub struct Machine {
-    expression: Box<Element>
+pub struct Machine<'a> {
+    expression: Box<Element>,
+    environment: HashMap<String, Box<Element>>
 }
 
-impl Machine {
-    pub fn new(expression: Box<Element>) -> Machine {
-        Machine { expression: expression }
+impl<'a> Machine<'a> {
+    pub fn new<'a>(expression: Box<Element>) -> Machine<'a> {
+        let map: HashMap<String, Box<Element>> = HashMap::new();
+        Machine {
+            expression: expression,
+            environment: map
+        }
     }
 
     pub fn step(&mut self) {
-        self.expression = box self.expression.reduce()
+        self.expression = box self.expression.reduce(&mut self.environment)
     }
 
     pub fn run(&mut self) {
@@ -204,7 +231,20 @@ fn test_reduces_boolean_expression() {
     assert_eq!("2 < 3".to_string(), format!("{}", i));
     assert_eq!(true, i.is_reducible());
 
-    let i = box i.reduce();
+    let mut empty_env = HashMap::new();
+    let i = box i.reduce(&mut empty_env);
     assert_eq!("true".to_string(), format!("{}", i));
     assert_eq!(false, i.is_reducible());
+}
+
+#[test]
+fn test_instantiate_variable_expression() {
+    let v = variable!("x".to_string());
+    assert_eq!("x".to_string(), format!("{}", v));
+    assert_eq!(true, v.is_reducible());
+
+    let mut empty_env = HashMap::new();
+    empty_env.insert("x".to_string(), number!(1));
+    let v = v.reduce(&mut empty_env);
+    assert_eq!("1".to_string(), format!("{}", v));
 }
