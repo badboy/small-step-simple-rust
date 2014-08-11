@@ -11,7 +11,7 @@ use std::fmt::Result;
 use std::collections::hashmap::HashMap;
 
 
-#[deriving(Clone)]
+#[deriving(Clone,PartialEq)]
 pub enum Element {
     Number(i64),
     Add(Box<Element>, Box<Element>),
@@ -95,7 +95,15 @@ impl Element {
                     },
                     None => DoNothing
                 }
-            }
+            },
+            Assign(ref name, ref expression) => {
+                if expression.is_reducible() {
+                    Assign(name.clone(), box expression.reduce(environment))
+                } else {
+                    environment.insert(name.clone(), expression.clone());
+                    DoNothing
+                }
+            },
             _ => fail!("type mismatch in reduce")
         }
     }
@@ -300,4 +308,16 @@ fn test_assignment_initializer() {
 
     assert_eq!("x = 1".to_string(), format!("{}", assignment));
     assert_eq!(true, assignment.is_reducible());
+}
+
+#[test]
+fn test_assigment_is_reduced() {
+    let assignment = assign!("x", number!(1));
+
+    let mut env = HashMap::new();
+    let assignment = assignment.reduce(&mut env);
+
+    let val = env.get(&"x".to_string());
+    assert_eq!(DoNothing, assignment);
+    assert_eq!(1, (*val).value());
 }
