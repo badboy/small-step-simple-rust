@@ -33,8 +33,6 @@
 
 #![feature(macro_rules)]
 
-extern crate std;
-
 use std::fmt::Show;
 use std::fmt::Formatter;
 use std::fmt::Result;
@@ -437,7 +435,7 @@ fn test_assigment_is_reduced() {
     let mut env = HashMap::new();
     let assignment = assignment.reduce(&mut env);
 
-    let val = env.get(&"x".to_string());
+    let ref val = env["x".to_string()];
     assert_eq!(DoNothing, assignment);
     assert_eq!(1, (*val).value());
 }

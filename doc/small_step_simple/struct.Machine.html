@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Machine` struct in crate `small_step_simple`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Machine">
+
+    <title>small_step_simple::Machine - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <section class="sidebar">
+        
+        <p class='location'><a href='index.html'>small_step_simple</a></p><div class='block struct'><h2>Structs</h2><a class='struct current' href='struct.Machine.html'>Machine</a></div>
+    </section>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press 'S' to search, '?' for more options..."
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><div class='in-band'>Struct <a href='index.html'>small_step_simple</a>&#8203;::<a class='struct' href=''>Machine</a>&#8203;</div><div class='out-of-band'><span id='render-detail'>
+            <a id="collapse-all" href="#">[-]
+            </a>&nbsp;<a id="expand-all" href="#">[+]</a>
+        </span><a id='src-2268' href='../src/small_step_simple/src/lib.rs.html#312-315'>[src]</a></div></h1>
+<pre class='rust struct'>pub struct Machine {
+    // some fields omitted
+}</pre><div class='docblock'><p>Our virtual machine, executing our constructed AST step-by-step</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><a class='stability Unmarked' title='No stability level'></a><code>impl <a class='struct' href='../small_step_simple/struct.Machine.html' title='small_step_simple::Machine'>Machine</a></code></h3><div class='impl-methods'><h4 id='method.new' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.new' class='fnname'>new</a>(expression: <a class='struct' href='http://doc.rust-lang.org/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='type' href='../small_step_simple/type.Element.html' title='small_step_simple::Element'>Element</a>&gt;, map: <a class='struct' href='http://doc.rust-lang.org/master/std/collections/hashmap/struct.HashMap.html' title='std::collections::hashmap::HashMap'>HashMap</a>&lt;<a class='struct' href='http://doc.rust-lang.org/master/collections/string/struct.String.html' title='collections::string::String'>String</a>, <a class='struct' href='http://doc.rust-lang.org/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='type' href='../small_step_simple/type.Element.html' title='small_step_simple::Element'>Element</a>&gt;&gt;) -&gt; <a class='struct' href='../small_step_simple/struct.Machine.html' title='small_step_simple::Machine'>Machine</a></code></h4>
+<div class='docblock'><p>Create a new machine with a given expression and an environment</p>
+</div><h4 id='method.new_with_empty_env' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.new_with_empty_env' class='fnname'>new_with_empty_env</a>(expression: <a class='struct' href='http://doc.rust-lang.org/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='type' href='../small_step_simple/type.Element.html' title='small_step_simple::Element'>Element</a>&gt;) -&gt; <a class='struct' href='../small_step_simple/struct.Machine.html' title='small_step_simple::Machine'>Machine</a></code></h4>
+<div class='docblock'><p>Create a new machine with a given expression and an <em>empty</em> environment</p>
+</div><h4 id='method.clone_env' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.clone_env' class='fnname'>clone_env</a>(&amp;self) -&gt; <a class='struct' href='http://doc.rust-lang.org/master/std/collections/hashmap/struct.HashMap.html' title='std::collections::hashmap::HashMap'>HashMap</a>&lt;<a class='struct' href='http://doc.rust-lang.org/master/collections/string/struct.String.html' title='collections::string::String'>String</a>, <a class='struct' href='http://doc.rust-lang.org/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='type' href='../small_step_simple/type.Element.html' title='small_step_simple::Element'>Element</a>&gt;&gt;</code></h4>
+<div class='docblock'><p>As the environment is passed in immutable, we need to clone it to get it back</p>
+</div><h4 id='method.step' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.step' class='fnname'>step</a>(&amp;mut self)</code></h4>
+<div class='docblock'><p>Reduce one step of our current expression</p>
+</div><h4 id='method.run' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.run' class='fnname'>run</a>(&amp;mut self)</code></h4>
+<div class='docblock'><p>Reduce until we reached a non-reducible expression.
+This prints the current expression before each step.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <div id="help" class="hidden">
+        <div class="shortcuts">
+            <h1>Keyboard shortcuts</h1>
+            <dl>
+                <dt>?</dt>
+                <dd>Show this help dialog</dd>
+                <dt>S</dt>
+                <dd>Focus the search field</dd>
+                <dt>&larrb;</dt>
+                <dd>Move up in search results</dd>
+                <dt>&rarrb;</dt>
+                <dd>Move down in search results</dd>
+                <dt>&#9166;</dt>
+                <dd>Go to active search result</dd>
+            </dl>
+        </div>
+        <div class="infos">
+            <h1>Search tricks</h1>
+            <p>
+                Prefix searches with a type followed by a colon (e.g.
+                <code>fn:</code>) to restrict the search to a given type.
+            </p>
+            <p>
+                Accepted types are: <code>fn</code>, <code>mod</code>,
+                <code>struct</code> (or <code>str</code>), <code>enum</code>,
+                <code>trait</code>, <code>typedef</code> (or
+                <code>tdef</code>).
+            </p>
+        </div>
+    </div>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "small_step_simple";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script async src="../search-index.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `small_step_simple` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, small_step_simple">
+
+    <title>small_step_simple - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <section class="sidebar">
+        
+        <p class='location'></p>
+    </section>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press 'S' to search, '?' for more options..."
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><div class='in-band'>Crate <a class='mod' href=''>small_step_simple</a>&#8203;</div><div class='out-of-band'><a href='stability.html'>[stability]</a> <span id='render-detail'>
+            <a id="collapse-all" href="#">[-]
+            </a>&nbsp;<a id="expand-all" href="#">[+]</a>
+        </span><a id='src-0' href='../src/small_step_simple/src/lib.rs.html#1-639'>[src]</a></div></h1>
+<div class='docblock'><p>This is an implementation of the small-step approach to the SIMPLE language as introduced by
+<a href="https://twitter.com/tomstuart">Tom Stuart</a> in &quot;Understanding Computation&quot;, Chapter 1, &quot;The Meaning of Programs&quot;.
+See his website: <a href="http://computationbook.com/">http://computationbook.com/</a>.</p>
+
+<p>The usage is pretty simple. As there is no parser for SIMPLE (yet?) you have to write the AST
+yourself. A few macros are provided for easy access. You can then create a virtual machine and
+pass this AST plus an environment hash. When calling <code>run</code>, the machine steps through the code,
+reducing it until it reaches a point where no further reduction is possible.</p>
+<pre class='rust '>
+<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>env</span> <span class='op'>=</span> <span class='ident'>HashMap</span>::<span class='ident'>new</span>();
+<span class='ident'>env</span>.<span class='ident'>insert</span>(<span class='string'>&quot;y&quot;</span>.<span class='ident'>to_string</span>(), <span class='macro'>number</span><span class='macro'>!</span>(<span class='number'>1</span>));
+
+<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>m</span> <span class='op'>=</span> <span class='ident'>Machine</span>::<span class='ident'>new</span>(
+    <span class='macro'>sequence</span><span class='macro'>!</span>(
+        <span class='macro'>assign</span><span class='macro'>!</span>(<span class='string'>&quot;x&quot;</span>, <span class='macro'>number</span><span class='macro'>!</span>(<span class='number'>3</span>)),
+        <span class='macro'>assign</span><span class='macro'>!</span>(<span class='string'>&quot;res&quot;</span>, <span class='macro'>add</span><span class='macro'>!</span>(<span class='macro'>add</span><span class='macro'>!</span>(<span class='macro'>number</span><span class='macro'>!</span>(<span class='number'>38</span>), <span class='macro'>variable</span><span class='macro'>!</span>(<span class='string'>&quot;x&quot;</span>)), <span class='macro'>variable</span><span class='macro'>!</span>(<span class='string'>&quot;y&quot;</span>)))
+        ),
+        <span class='ident'>env</span>
+    );
+
+<span class='ident'>m</span>.<span class='ident'>run</span>();
+<span class='comment'>// Add this point `res` in the HashMap will be `Number(42)`</span>
+</pre>
+
+<p>The code is much larger as the equivalent Ruby code. This is both due to the restricitions
+of Rust (explicit types and everything, a good thing) and my non-existing experience with Rust
+at all (this is my first Rust code larger than a simple &quot;Hello World&quot;)</p>
+</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='struct' href='struct.Machine.html'
+                               title='small_step_simple::Machine'>Machine</a></td>
+                        <td class='docblock short'><p>Our virtual machine, executing our constructed AST step-by-step</p>
+</td>
+                    </tr>
+                </table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='type' href='type.Element.html'
+                               title='small_step_simple::Element'>Element</a></td>
+                        <td class='docblock short'><p>Our AST elements.</p>
+</td>
+                    </tr>
+                </table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <div id="help" class="hidden">
+        <div class="shortcuts">
+            <h1>Keyboard shortcuts</h1>
+            <dl>
+                <dt>?</dt>
+                <dd>Show this help dialog</dd>
+                <dt>S</dt>
+                <dd>Focus the search field</dd>
+                <dt>&larrb;</dt>
+                <dd>Move up in search results</dd>
+                <dt>&rarrb;</dt>
+                <dd>Move down in search results</dd>
+                <dt>&#9166;</dt>
+                <dd>Go to active search result</dd>
+            </dl>
+        </div>
+        <div class="infos">
+            <h1>Search tricks</h1>
+            <p>
+                Prefix searches with a type followed by a colon (e.g.
+                <code>fn:</code>) to restrict the search to a given type.
+            </p>
+            <p>
+                Accepted types are: <code>fn</code>, <code>mod</code>,
+                <code>struct</code> (or <code>str</code>), <code>enum</code>,
+                <code>trait</code>, <code>typedef</code> (or
+                <code>tdef</code>).
+            </p>
+        </div>
+    </div>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "small_step_simple";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script async src="../search-index.js"></script>
+</body>
+</html>
