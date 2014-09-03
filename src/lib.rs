@@ -10,7 +10,7 @@
 //! pass this AST plus an environment hash. When calling `run`, the machine steps through the code,
 //! reducing it until it reaches a point where no further reduction is possible.
 //!
-//! ```
+//! ```ignore
 //! let mut env = HashMap::new();
 //! env.insert("y".to_string(), number!(1));
 //!
