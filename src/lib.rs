@@ -32,11 +32,13 @@
 //! at all (this is my first Rust code larger than a simple "Hello World")
 
 #![feature(macro_rules)]
+#![feature(globs)]
 
 use std::fmt::Show;
 use std::fmt::Formatter;
 use std::fmt::Result;
-use std::collections::hashmap::HashMap;
+use std::collections::hash_map::HashMap;
+use Element::*;
 
 /// Our AST elements.
 #[deriving(Clone,PartialEq)]
@@ -175,7 +177,7 @@ impl Element {
             Number(val) => val,
             Boolean(true) => 1,
             Boolean(false) => 0,
-            _ => fail!("type mismatch in value")
+            _ => panic!("type mismatch in value")
         }
     }
 
@@ -210,7 +212,7 @@ impl Element {
                 }
             },
             Variable(ref v) => {
-                match environment.find(v) {
+                match environment.get(v) {
                     Some(v) => {
                         *v.clone()
                     },
@@ -241,14 +243,14 @@ impl Element {
                 if cond.is_reducible() {
                     IfElse(box cond.reduce(environment), cons.clone(), alt.clone())
                 } else {
-                    fail!("Condition in if not reducible (but not bool): {}", cond)
+                    panic!("Condition in if not reducible (but not bool): {}", cond)
                 }
             },
             While(ref cond, ref body) => {
                 IfElse(cond.clone(), box Sequence(body.clone(), box self.clone()), box DoNothing)
             }
             DoNothing => { DoNothing }
-            _ => fail!("type mismatch in reduce: {}", *self)
+            _ => panic!("type mismatch in reduce: {}", *self)
         }
     }
 }
@@ -477,9 +479,9 @@ fn test_expression_with_assignment_and_variables_runs() {
 
     let env = m.clone_env();
 
-    assert_eq!(1, env.get(&"y".to_string()).value());
-    assert_eq!(3, env.get(&"x".to_string()).value());
-    assert_eq!(42, env.get(&"res".to_string()).value());
+    assert_eq!(1, env.get(&"y".to_string()).unwrap().value());
+    assert_eq!(3, env.get(&"x".to_string()).unwrap().value());
+    assert_eq!(42, env.get(&"res".to_string()).unwrap().value());
 }
 
 #[test]
@@ -578,8 +580,8 @@ fn test_expression_with_assignment_and_if() {
 
     let env = m.clone_env();
 
-    assert_eq!(0, env.get(&"x".to_string()).value());
-    assert_eq!(42, env.get(&"y".to_string()).value());
+    assert_eq!(0, env.get(&"x".to_string()).unwrap().value());
+    assert_eq!(42, env.get(&"y".to_string()).unwrap().value());
 }
 
 #[test]
@@ -633,5 +635,5 @@ fn test_while_loops_fully_with_machine () {
 
     let env = m.clone_env();
 
-    assert_eq!(9, env.get(&"x".to_string()).value());
+    assert_eq!(9, env.get(&"x".to_string()).unwrap().value());
 }
