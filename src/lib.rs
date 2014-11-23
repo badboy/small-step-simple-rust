@@ -32,13 +32,11 @@
 //! at all (this is my first Rust code larger than a simple "Hello World")
 
 #![feature(macro_rules)]
-#![feature(globs)]
 
 use std::fmt::Show;
 use std::fmt::Formatter;
 use std::fmt::Result;
 use std::collections::hash_map::HashMap;
-use Element::*;
 
 /// Our AST elements.
 #[deriving(Clone,PartialEq)]
@@ -73,57 +71,57 @@ pub enum Element {
 /// Macros to create boxed AST elements.
 macro_rules! number(
     ($val:expr) => (
-        box Number($val)
+        box Element::Number($val)
     );
 )
 macro_rules! add(
     ($l:expr, $r:expr) => (
-        box Add($l, $r)
+        box Element::Add($l, $r)
     );
 )
 macro_rules! multiply(
     ($l:expr, $r:expr) => (
-        box Multiply($l, $r)
+        box Element::Multiply($l, $r)
     );
 )
 macro_rules! boolean(
     ($val:expr) => (
-        box Boolean($val)
+        box Element::Boolean($val)
     );
 )
 macro_rules! less_than(
     ($l:expr, $r:expr) => (
-        box LessThan($l, $r)
+        box Element::LessThan($l, $r)
     );
 )
 macro_rules! variable(
     ($v:expr) => (
-        box Variable($v.to_string())
+        box Element::Variable($v.to_string())
     );
 )
 macro_rules! assign(
     ($name:expr, $exp:expr) => (
-        box Assign($name.to_string(), $exp)
+        box Element::Assign($name.to_string(), $exp)
     );
 )
 macro_rules! sequence(
     ($first:expr, $second:expr) => (
-        box Sequence($first, $second)
+        box Element::Sequence($first, $second)
     );
 )
 macro_rules! ifelse(
     ($condition:expr, $consequence:expr, $alternative:expr) => (
-        box IfElse($condition, $consequence, $alternative)
+        box Element::IfElse($condition, $consequence, $alternative)
     );
 )
 macro_rules! if_(
     ($condition:expr, $consequence:expr) => (
-        box IfElse($condition, $consequence, box DoNothing)
+        box Element::IfElse($condition, $consequence, box Element::DoNothing)
     );
 )
 macro_rules! while_(
     ($condition:expr, $body:expr) => (
-        box While($condition, $body)
+        box Element::While($condition, $body)
     );
 )
 
@@ -132,21 +130,21 @@ impl Show for Element {
     /// Output a user-readable representation of the expression
     fn fmt(&self, f: &mut Formatter) -> Result {
         match *self {
-            Number(ref value) => write!(f, "{}", value),
-            Add(ref l, ref r) => write!(f, "{} + {}", l, r),
-            Multiply(ref l, ref r) => write!(f, "{} * {}", l, r),
-            LessThan(ref l, ref r) => write!(f, "{} < {}", l, r),
-            Boolean(ref b) => write!(f, "{}", b),
-            Variable(ref value) => write!(f, "{}", value),
-            Assign(ref name, ref val) => write!(f, "{} = {}", name, val),
-            Sequence(ref first, ref second) => write!(f, "{}; {}", first, second),
-            IfElse(ref cond, ref cons, ref alt) => {
+            Element::Number(ref value) => write!(f, "{}", value),
+            Element::Add(ref l, ref r) => write!(f, "{} + {}", l, r),
+            Element::Multiply(ref l, ref r) => write!(f, "{} * {}", l, r),
+            Element::LessThan(ref l, ref r) => write!(f, "{} < {}", l, r),
+            Element::Boolean(ref b) => write!(f, "{}", b),
+            Element::Variable(ref value) => write!(f, "{}", value),
+            Element::Assign(ref name, ref val) => write!(f, "{} = {}", name, val),
+            Element::Sequence(ref first, ref second) => write!(f, "{}; {}", first, second),
+            Element::IfElse(ref cond, ref cons, ref alt) => {
                 write!(f, "if ({}) [ {} ] else [ {} ]", cond, cons, alt)
             }
-            While(ref cond, ref body) => {
+            Element::While(ref cond, ref body) => {
                 write!(f, "while ({}) [ {} ]", cond, body)
             }
-            DoNothing => write!(f, "do-nothing")
+            Element::DoNothing => write!(f, "do-nothing")
         }
     }
 }
@@ -155,17 +153,17 @@ impl Element {
     /// Wether or not an expression is reducible. See Element for more info.
     pub fn is_reducible(&self) -> bool {
         match *self {
-            Number(_) => false,
-            Boolean(_) => false,
-            DoNothing => false,
-            Add(_, _) => true,
-            Multiply(_, _) => true,
-            LessThan(_, _) => true,
-            Variable(_) => true,
-            Assign(_, _) => true,
-            Sequence(_, _) => true,
-            IfElse(_, _, _) => true,
-            While(_, _) => true,
+            Element::Number(_) => false,
+            Element::Boolean(_) => false,
+            Element::DoNothing => false,
+            Element::Add(_, _) => true,
+            Element::Multiply(_, _) => true,
+            Element::LessThan(_, _) => true,
+            Element::Variable(_) => true,
+            Element::Assign(_, _) => true,
+            Element::Sequence(_, _) => true,
+            Element::IfElse(_, _, _) => true,
+            Element::While(_, _) => true,
         }
     }
 
@@ -174,9 +172,9 @@ impl Element {
     /// Boolean maps to Integers: true=1, false=0.
     pub fn value(&self) -> i64 {
         match *self {
-            Number(val) => val,
-            Boolean(true) => 1,
-            Boolean(false) => 0,
+            Element::Number(val) => val,
+            Element::Boolean(true) => 1,
+            Element::Boolean(false) => 0,
             _ => panic!("type mismatch in value")
         }
     }
@@ -184,72 +182,72 @@ impl Element {
     /// Reduce the expression according to the rules for the current element.
     pub fn reduce(&self, environment: &mut HashMap<String, Box<Element>>) -> Element {
         match *self {
-            Add(ref l, ref r) => {
+            Element::Add(ref l, ref r) => {
                 if l.is_reducible() {
-                    Add(box l.reduce(environment), r.clone())
+                    Element::Add(box l.reduce(environment), r.clone())
                 } else if r.is_reducible() {
-                    Add(l.clone(), box r.reduce(environment))
+                    Element::Add(l.clone(), box r.reduce(environment))
                 } else {
-                    Number(l.value() + r.value())
+                    Element::Number(l.value() + r.value())
                 }
             },
-            Multiply(ref l, ref r) => {
+            Element::Multiply(ref l, ref r) => {
                 if l.is_reducible() {
-                    Multiply(box l.reduce(environment), r.clone())
+                    Element::Multiply(box l.reduce(environment), r.clone())
                 } else if r.is_reducible() {
-                    Multiply(l.clone(), box r.reduce(environment))
+                    Element::Multiply(l.clone(), box r.reduce(environment))
                 } else {
-                    Number(l.value() * r.value())
+                    Element::Number(l.value() * r.value())
                 }
             },
-            LessThan(ref l, ref r) => {
+            Element::LessThan(ref l, ref r) => {
                 if l.is_reducible() {
-                    LessThan(box l.reduce(environment), r.clone())
+                    Element::LessThan(box l.reduce(environment), r.clone())
                 } else if r.is_reducible() {
-                    LessThan(l.clone(), box r.reduce(environment))
+                    Element::LessThan(l.clone(), box r.reduce(environment))
                 } else {
-                    Boolean(l.value() < r.value())
+                    Element::Boolean(l.value() < r.value())
                 }
             },
-            Variable(ref v) => {
+            Element::Variable(ref v) => {
                 match environment.get(v) {
                     Some(v) => {
                         *v.clone()
                     },
-                    None => DoNothing
+                    None => Element::DoNothing
                 }
             },
-            Assign(ref name, ref expression) => {
+            Element::Assign(ref name, ref expression) => {
                 if expression.is_reducible() {
-                    Assign(name.clone(), box expression.reduce(environment))
+                    Element::Assign(name.clone(), box expression.reduce(environment))
                 } else {
                     environment.insert(name.clone(), expression.clone());
-                    DoNothing
+                    Element::DoNothing
                 }
             },
-            Sequence(box DoNothing, ref second) => {
+            Element::Sequence(box Element::DoNothing, ref second) => {
                 *second.clone()
             },
-            Sequence(ref first, ref second) => {
-                Sequence(box first.reduce(environment), second.clone())
+            Element::Sequence(ref first, ref second) => {
+                Element::Sequence(box first.reduce(environment), second.clone())
             },
-            IfElse(box Boolean(true), ref cons, _) => {
+            Element::IfElse(box Element::Boolean(true), ref cons, _) => {
                 *cons.clone()
             },
-            IfElse(box Boolean(false), _, ref alt) => {
+            Element::IfElse(box Element::Boolean(false), _, ref alt) => {
                 *alt.clone()
             },
-            IfElse(ref cond, ref cons, ref alt) => {
+            Element::IfElse(ref cond, ref cons, ref alt) => {
                 if cond.is_reducible() {
-                    IfElse(box cond.reduce(environment), cons.clone(), alt.clone())
+                    Element::IfElse(box cond.reduce(environment), cons.clone(), alt.clone())
                 } else {
                     panic!("Condition in if not reducible (but not bool): {}", cond)
                 }
             },
-            While(ref cond, ref body) => {
-                IfElse(cond.clone(), box Sequence(body.clone(), box self.clone()), box DoNothing)
+            Element::While(ref cond, ref body) => {
+                Element::IfElse(cond.clone(), box Element::Sequence(body.clone(), box self.clone()), box Element::DoNothing)
             }
-            DoNothing => { DoNothing }
+            Element::DoNothing => { Element::DoNothing }
             _ => panic!("type mismatch in reduce: {}", *self)
         }
     }
@@ -438,14 +436,14 @@ fn test_assigment_is_reduced() {
     let assignment = assignment.reduce(&mut env);
 
     let ref val = env["x".to_string()];
-    assert_eq!(DoNothing, assignment);
+    assert_eq!(Element::DoNothing, assignment);
     assert_eq!(1, (*val).value());
 }
 
 #[test]
 fn test_sequence_is_reduced() {
     let sequence = sequence!(
-        box DoNothing,
+        box Element::DoNothing,
         add!(number!(1), number!(2))
         );
 
