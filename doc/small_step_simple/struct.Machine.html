@@ -26,7 +26,7 @@
 
     <section class="sidebar">
         
-        <p class='location'><a href='index.html'>small_step_simple</a></p><div class='block struct'><h2>Structs</h2><a class='struct current' href='struct.Machine.html'>Machine</a></div>
+        <p class='location'><a href='index.html'>small_step_simple</a></p><div class='block struct'><h2>Structs</h2><a class='struct current' href='struct.Machine.html' title='Our virtual machine, executing our constructed AST step-by-step'>Machine</a></div><div class='block enum'><h2>Enums</h2><a class='enum ' href='enum.Element.html' title='Our AST elements.'>Element</a></div>
     </section>
 
     <nav class="sub">
@@ -41,18 +41,17 @@
     </nav>
 
     <section id='main' class="content struct">
-<h1 class='fqn'><div class='in-band'>Struct <a href='index.html'>small_step_simple</a>&#8203;::<a class='struct' href=''>Machine</a>&#8203;</div><div class='out-of-band'><span id='render-detail'>
-            <a id="collapse-all" href="#">[-]
-            </a>&nbsp;<a id="expand-all" href="#">[+]</a>
-        </span><a id='src-2268' href='../src/small_step_simple/src/lib.rs.html#312-315'>[src]</a></div></h1>
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>small_step_simple</a>::<wbr><a class='struct' href=''>Machine</a><wbr></span><span class='out-of-band'><span id='render-detail'>
+            <a id="collapse-all" href="#">[-]</a>&nbsp;<a id="expand-all" href="#">[+]</a>
+        </span><a id='src-1854' href='../src/small_step_simple/lib.rs.html#307-310'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct Machine {
     // some fields omitted
 }</pre><div class='docblock'><p>Our virtual machine, executing our constructed AST step-by-step</p>
-</div><h2 id='methods'>Methods</h2><h3 class='impl'><a class='stability Unmarked' title='No stability level'></a><code>impl <a class='struct' href='../small_step_simple/struct.Machine.html' title='small_step_simple::Machine'>Machine</a></code></h3><div class='impl-methods'><h4 id='method.new' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.new' class='fnname'>new</a>(expression: <a class='struct' href='http://doc.rust-lang.org/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='type' href='../small_step_simple/type.Element.html' title='small_step_simple::Element'>Element</a>&gt;, map: <a class='struct' href='http://doc.rust-lang.org/master/std/collections/hashmap/struct.HashMap.html' title='std::collections::hashmap::HashMap'>HashMap</a>&lt;<a class='struct' href='http://doc.rust-lang.org/master/collections/string/struct.String.html' title='collections::string::String'>String</a>, <a class='struct' href='http://doc.rust-lang.org/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='type' href='../small_step_simple/type.Element.html' title='small_step_simple::Element'>Element</a>&gt;&gt;) -&gt; <a class='struct' href='../small_step_simple/struct.Machine.html' title='small_step_simple::Machine'>Machine</a></code></h4>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><a class='stability Unmarked' title='No stability level'></a><code>impl <a class='struct' href='../small_step_simple/struct.Machine.html' title='small_step_simple::Machine'>Machine</a></code></h3><div class='impl-items'><h4 id='method.new' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.new' class='fnname'>new</a>(expression: <a class='struct' href='http://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='enum' href='../small_step_simple/enum.Element.html' title='small_step_simple::Element'>Element</a>&gt;, map: <a class='struct' href='http://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html' title='std::collections::hash::map::HashMap'>HashMap</a>&lt;<a class='struct' href='http://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>, <a class='struct' href='http://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='enum' href='../small_step_simple/enum.Element.html' title='small_step_simple::Element'>Element</a>&gt;&gt;) -&gt; <a class='struct' href='../small_step_simple/struct.Machine.html' title='small_step_simple::Machine'>Machine</a></code></h4>
 <div class='docblock'><p>Create a new machine with a given expression and an environment</p>
-</div><h4 id='method.new_with_empty_env' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.new_with_empty_env' class='fnname'>new_with_empty_env</a>(expression: <a class='struct' href='http://doc.rust-lang.org/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='type' href='../small_step_simple/type.Element.html' title='small_step_simple::Element'>Element</a>&gt;) -&gt; <a class='struct' href='../small_step_simple/struct.Machine.html' title='small_step_simple::Machine'>Machine</a></code></h4>
+</div><h4 id='method.new_with_empty_env' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.new_with_empty_env' class='fnname'>new_with_empty_env</a>(expression: <a class='struct' href='http://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='enum' href='../small_step_simple/enum.Element.html' title='small_step_simple::Element'>Element</a>&gt;) -&gt; <a class='struct' href='../small_step_simple/struct.Machine.html' title='small_step_simple::Machine'>Machine</a></code></h4>
 <div class='docblock'><p>Create a new machine with a given expression and an <em>empty</em> environment</p>
-</div><h4 id='method.clone_env' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.clone_env' class='fnname'>clone_env</a>(&amp;self) -&gt; <a class='struct' href='http://doc.rust-lang.org/master/std/collections/hashmap/struct.HashMap.html' title='std::collections::hashmap::HashMap'>HashMap</a>&lt;<a class='struct' href='http://doc.rust-lang.org/master/collections/string/struct.String.html' title='collections::string::String'>String</a>, <a class='struct' href='http://doc.rust-lang.org/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='type' href='../small_step_simple/type.Element.html' title='small_step_simple::Element'>Element</a>&gt;&gt;</code></h4>
+</div><h4 id='method.clone_env' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.clone_env' class='fnname'>clone_env</a>(&amp;self) -&gt; <a class='struct' href='http://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html' title='std::collections::hash::map::HashMap'>HashMap</a>&lt;<a class='struct' href='http://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>, <a class='struct' href='http://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='enum' href='../small_step_simple/enum.Element.html' title='small_step_simple::Element'>Element</a>&gt;&gt;</code></h4>
 <div class='docblock'><p>As the environment is passed in immutable, we need to clone it to get it back</p>
 </div><h4 id='method.step' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.step' class='fnname'>step</a>(&amp;mut self)</code></h4>
 <div class='docblock'><p>Reduce one step of our current expression</p>
@@ -88,7 +87,7 @@ This prints the current expression before each step.</p>
             </p>
             <p>
                 Accepted types are: <code>fn</code>, <code>mod</code>,
-                <code>struct</code> (or <code>str</code>), <code>enum</code>,
+                <code>struct</code>, <code>enum</code>,
                 <code>trait</code>, <code>typedef</code> (or
                 <code>tdef</code>).
             </p>

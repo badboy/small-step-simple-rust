@@ -41,10 +41,9 @@
     </nav>
 
     <section id='main' class="content mod">
-<h1 class='fqn'><div class='in-band'>Crate <a class='mod' href=''>small_step_simple</a>&#8203;</div><div class='out-of-band'><a href='stability.html'>[stability]</a> <span id='render-detail'>
-            <a id="collapse-all" href="#">[-]
-            </a>&nbsp;<a id="expand-all" href="#">[+]</a>
-        </span><a id='src-0' href='../src/small_step_simple/src/lib.rs.html#1-639'>[src]</a></div></h1>
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>small_step_simple</a><wbr></span><span class='out-of-band'><a href='stability.html'>[stability]</a> <span id='render-detail'>
+            <a id="collapse-all" href="#">[-]</a>&nbsp;<a id="expand-all" href="#">[+]</a>
+        </span><a id='src-0' href='../src/small_step_simple/lib.rs.html#1-634'>[src]</a></span></h1>
 <div class='docblock'><p>This is an implementation of the small-step approach to the SIMPLE language as introduced by
 <a href="https://twitter.com/tomstuart">Tom Stuart</a> in &quot;Understanding Computation&quot;, Chapter 1, &quot;The Meaning of Programs&quot;.
 See his website: <a href="http://computationbook.com/">http://computationbook.com/</a>.</p>
@@ -53,7 +52,7 @@ See his website: <a href="http://computationbook.com/">http://computationbook.co
 yourself. A few macros are provided for easy access. You can then create a virtual machine and
 pass this AST plus an environment hash. When calling <code>run</code>, the machine steps through the code,
 reducing it until it reaches a point where no further reduction is possible.</p>
-<pre class='rust '>
+<pre id='rust-example-rendered' class='rust '>
 <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>env</span> <span class='op'>=</span> <span class='ident'>HashMap</span>::<span class='ident'>new</span>();
 <span class='ident'>env</span>.<span class='ident'>insert</span>(<span class='string'>&quot;y&quot;</span>.<span class='ident'>to_string</span>(), <span class='macro'>number</span><span class='macro'>!</span>(<span class='number'>1</span>));
 
@@ -66,7 +65,7 @@ reducing it until it reaches a point where no further reduction is possible.</p>
     );
 
 <span class='ident'>m</span>.<span class='ident'>run</span>();
-<span class='comment'>// Add this point `res` in the HashMap will be `Number(42)`</span>
+<span class='comment'>// At this point `res` in the HashMap will be `Number(42)`</span>
 </pre>
 
 <p>The code is much larger as the equivalent Ruby code. This is both due to the restricitions
@@ -83,7 +82,7 @@ at all (this is my first Rust code larger than a simple &quot;Hello World&quot;)
                 </table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
 <table>
                     <tr>
-                        <td><a class='stability Unmarked' title='No stability level'></a><a class='type' href='type.Element.html'
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='enum' href='enum.Element.html'
                                title='small_step_simple::Element'>Element</a></td>
                         <td class='docblock short'><p>Our AST elements.</p>
 </td>
@@ -117,7 +116,7 @@ at all (this is my first Rust code larger than a simple &quot;Hello World&quot;)
             </p>
             <p>
                 Accepted types are: <code>fn</code>, <code>mod</code>,
-                <code>struct</code> (or <code>str</code>), <code>enum</code>,
+                <code>struct</code>, <code>enum</code>,
                 <code>trait</code>, <code>typedef</code> (or
                 <code>tdef</code>).
             </p>

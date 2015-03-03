@@ -26,7 +26,7 @@ let mut m = Machine::new(
     );
 
 m.run();
-// Add this point `res` in the HashMap will be `Number(42)`
+// At this point `res` in the HashMap will be `Number(42)`
 ```
 
 
