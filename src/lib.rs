@@ -1,6 +1,3 @@
-#![crate_name = "small_step_simple"]
-#![crate_type = "lib"]
-
 //! This is an implementation of the small-step approach to the SIMPLE language as introduced by
 //! [Tom Stuart](https://twitter.com/tomstuart) in "Understanding Computation", Chapter 1, "The Meaning of Programs".
 //! See his website: <http://computationbook.com/>.
@@ -31,15 +28,15 @@
 //! of Rust (explicit types and everything, a good thing) and my non-existing experience with Rust
 //! at all (this is my first Rust code larger than a simple "Hello World")
 
-#![feature(macro_rules)]
+#![feature(box_syntax,box_patterns)]
 
-use std::fmt::Show;
+use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::fmt::Result;
 use std::collections::hash_map::HashMap;
 
 /// Our AST elements.
-#[deriving(Clone,PartialEq)]
+#[derive(Clone,PartialEq)]
 pub enum Element {
     /// A simple number object, this cannot be reduced further.
     Number(i64),
@@ -73,76 +70,76 @@ macro_rules! number(
     ($val:expr) => (
         box Element::Number($val)
     );
-)
+);
 macro_rules! add(
     ($l:expr, $r:expr) => (
         box Element::Add($l, $r)
-    );
-)
+    )
+);
 macro_rules! multiply(
     ($l:expr, $r:expr) => (
         box Element::Multiply($l, $r)
-    );
-)
+    )
+);
 macro_rules! boolean(
     ($val:expr) => (
         box Element::Boolean($val)
-    );
-)
+    )
+);
 macro_rules! less_than(
     ($l:expr, $r:expr) => (
         box Element::LessThan($l, $r)
-    );
-)
+    )
+);
 macro_rules! variable(
     ($v:expr) => (
         box Element::Variable($v.to_string())
-    );
-)
+    )
+);
 macro_rules! assign(
     ($name:expr, $exp:expr) => (
         box Element::Assign($name.to_string(), $exp)
-    );
-)
+    )
+);
 macro_rules! sequence(
     ($first:expr, $second:expr) => (
         box Element::Sequence($first, $second)
-    );
-)
+    )
+);
 macro_rules! ifelse(
     ($condition:expr, $consequence:expr, $alternative:expr) => (
         box Element::IfElse($condition, $consequence, $alternative)
-    );
-)
+    )
+);
 macro_rules! if_(
     ($condition:expr, $consequence:expr) => (
         box Element::IfElse($condition, $consequence, box Element::DoNothing)
-    );
-)
+    )
+);
 macro_rules! while_(
     ($condition:expr, $body:expr) => (
         box Element::While($condition, $body)
-    );
-)
+    )
+);
 
 
-impl Show for Element {
+impl Debug for Element {
     /// Output a user-readable representation of the expression
     fn fmt(&self, f: &mut Formatter) -> Result {
         match *self {
-            Element::Number(ref value) => write!(f, "{}", value),
-            Element::Add(ref l, ref r) => write!(f, "{} + {}", l, r),
-            Element::Multiply(ref l, ref r) => write!(f, "{} * {}", l, r),
-            Element::LessThan(ref l, ref r) => write!(f, "{} < {}", l, r),
-            Element::Boolean(ref b) => write!(f, "{}", b),
+            Element::Number(ref value) => write!(f, "{:?}", value),
+            Element::Add(ref l, ref r) => write!(f, "{:?} + {:?}", l, r),
+            Element::Multiply(ref l, ref r) => write!(f, "{:?} * {:?}", l, r),
+            Element::LessThan(ref l, ref r) => write!(f, "{:?} < {:?}", l, r),
+            Element::Boolean(ref b) => write!(f, "{:?}", b),
             Element::Variable(ref value) => write!(f, "{}", value),
-            Element::Assign(ref name, ref val) => write!(f, "{} = {}", name, val),
-            Element::Sequence(ref first, ref second) => write!(f, "{}; {}", first, second),
+            Element::Assign(ref name, ref val) => write!(f, "{} = {:?}", name, val),
+            Element::Sequence(ref first, ref second) => write!(f, "{:?}; {:?}", first, second),
             Element::IfElse(ref cond, ref cons, ref alt) => {
-                write!(f, "if ({}) [ {} ] else [ {} ]", cond, cons, alt)
+                write!(f, "if ({:?}) [ {:?} ] else [ {:?} ]", cond, cons, alt)
             }
             Element::While(ref cond, ref body) => {
-                write!(f, "while ({}) [ {} ]", cond, body)
+                write!(f, "while ({:?}) [ {:?} ]", cond, body)
             }
             Element::DoNothing => write!(f, "do-nothing")
         }
@@ -241,14 +238,14 @@ impl Element {
                 if cond.is_reducible() {
                     Element::IfElse(box cond.reduce(environment), cons.clone(), alt.clone())
                 } else {
-                    panic!("Condition in if not reducible (but not bool): {}", cond)
+                    panic!("Condition in if not reducible (but not bool): {:?}", cond)
                 }
             },
             Element::While(ref cond, ref body) => {
                 Element::IfElse(cond.clone(), box Element::Sequence(body.clone(), box self.clone()), box Element::DoNothing)
             }
             Element::DoNothing => { Element::DoNothing }
-            _ => panic!("type mismatch in reduce: {}", *self)
+            _ => panic!("type mismatch in reduce: {:?}", *self)
         }
     }
 }
@@ -256,25 +253,25 @@ impl Element {
 #[test]
 fn test_types_are_creatable() {
     let i = number!(3);
-    assert_eq!("3".to_string(), format!("{}", i));
+    assert_eq!("3".to_string(), format!("{:?}", i));
     assert_eq!(false, i.is_reducible());
 
     let i = add!(number!(3), number!(4));
-    assert_eq!("3 + 4".to_string(), format!("{}", i));
+    assert_eq!("3 + 4".to_string(), format!("{:?}", i));
     assert_eq!(true, i.is_reducible());
 
     let i = multiply!(
         add!(number!(3), number!(4)),
         number!(2));
-    assert_eq!("3 + 4 * 2".to_string(), format!("{}", i));
+    assert_eq!("3 + 4 * 2".to_string(), format!("{:?}", i));
     assert_eq!(true, i.is_reducible());
 
     let i = boolean!(true);
-    assert_eq!("true".to_string(), format!("{}", i));
+    assert_eq!("true".to_string(), format!("{:?}", i));
     assert_eq!(false, i.is_reducible());
 
     let i = less_than!(number!(2), number!(3));
-    assert_eq!("2 < 3".to_string(), format!("{}", i));
+    assert_eq!("2 < 3".to_string(), format!("{:?}", i));
     assert_eq!(true, i.is_reducible());
 }
 
@@ -296,13 +293,13 @@ fn test_expression_reduces() {
     );
 
     let mut empty_env = HashMap::new();
-    assert_eq!("1 * 2 + 3 * 4".to_string(), format!("{}", expression));
+    assert_eq!("1 * 2 + 3 * 4".to_string(), format!("{:?}", expression));
     let red = expression.reduce(&mut empty_env);
-    assert_eq!("2 + 3 * 4".to_string(), format!("{}", red));
+    assert_eq!("2 + 3 * 4".to_string(), format!("{:?}", red));
     let red = red.reduce(&mut empty_env);
-    assert_eq!("2 + 12".to_string(), format!("{}", red));
+    assert_eq!("2 + 12".to_string(), format!("{:?}", red));
     let red = red.reduce(&mut empty_env);
-    assert_eq!("14".to_string(), format!("{}", red));
+    assert_eq!("14".to_string(), format!("{:?}", red));
     assert_eq!(false, red.is_reducible())
 }
 
@@ -344,11 +341,11 @@ impl Machine {
     /// This prints the current expression before each step.
     pub fn run(&mut self) {
         while self.expression.is_reducible() {
-            println!("{}", self.expression);
+            println!("{:?}", self.expression);
             self.step()
         }
 
-        println!("{}", self.expression);
+        println!("{:?}", self.expression);
     }
 }
 
@@ -370,25 +367,25 @@ fn test_machine_reduces_algebraic_expression() {
 #[test]
 fn test_reduces_boolean_expression() {
     let i = less_than!(number!(2), number!(3));
-    assert_eq!("2 < 3".to_string(), format!("{}", i));
+    assert_eq!("2 < 3".to_string(), format!("{:?}", i));
     assert_eq!(true, i.is_reducible());
 
     let mut empty_env = HashMap::new();
     let i = box i.reduce(&mut empty_env);
-    assert_eq!("true".to_string(), format!("{}", i));
+    assert_eq!("true".to_string(), format!("{:?}", i));
     assert_eq!(false, i.is_reducible());
 }
 
 #[test]
 fn test_instantiate_variable_expression() {
     let v = variable!("x".to_string());
-    assert_eq!("x".to_string(), format!("{}", v));
+    assert_eq!("x".to_string(), format!("{:?}", v));
     assert_eq!(true, v.is_reducible());
 
     let mut empty_env = HashMap::new();
     empty_env.insert("x".to_string(), number!(1));
     let v = v.reduce(&mut empty_env);
-    assert_eq!("1".to_string(), format!("{}", v));
+    assert_eq!("1".to_string(), format!("{:?}", v));
 }
 
 #[test]
@@ -409,22 +406,22 @@ fn test_machine_reduces_with_variables() {
     env.insert("y".to_string(), number!(4));
 
     let exp = add!(variable!("x"), variable!("y"));
-    assert_eq!("x + y".to_string(), format!("{}", exp));
+    assert_eq!("x + y".to_string(), format!("{:?}", exp));
     let exp = exp.reduce(&mut env);
-    assert_eq!("3 + y".to_string(), format!("{}", exp));
+    assert_eq!("3 + y".to_string(), format!("{:?}", exp));
 
     let exp = exp.reduce(&mut env);
-    assert_eq!("3 + 4".to_string(), format!("{}", exp));
+    assert_eq!("3 + 4".to_string(), format!("{:?}", exp));
 
     let exp = exp.reduce(&mut env);
-    assert_eq!("7".to_string(), format!("{}", exp));
+    assert_eq!("7".to_string(), format!("{:?}", exp));
 }
 
 #[test]
 fn test_assignment_initializer() {
     let assignment = assign!("x", number!(1));
 
-    assert_eq!("x = 1".to_string(), format!("{}", assignment));
+    assert_eq!("x = 1".to_string(), format!("{:?}", assignment));
     assert_eq!(true, assignment.is_reducible());
 }
 
@@ -495,10 +492,10 @@ fn test_if_is_reduced_true () {
 
 
     assert_eq!(true, if_block.is_reducible());
-    assert_eq!("if (true) [ 1 ] else [ 2 ]".to_string(), format!("{}", if_block));
+    assert_eq!("if (true) [ 1 ] else [ 2 ]".to_string(), format!("{:?}", if_block));
 
     let if_block = if_block.reduce(&mut env);
-    assert_eq!("1".to_string(), format!("{}", if_block));
+    assert_eq!("1".to_string(), format!("{:?}", if_block));
 }
 
 #[test]
@@ -514,10 +511,10 @@ fn test_if_is_reduced_false () {
 
 
     assert_eq!(true, if_block.is_reducible());
-    assert_eq!("if (false) [ 1 ] else [ 2 ]".to_string(), format!("{}", if_block));
+    assert_eq!("if (false) [ 1 ] else [ 2 ]".to_string(), format!("{:?}", if_block));
 
     let if_block = if_block.reduce(&mut env);
-    assert_eq!("2".to_string(), format!("{}", if_block));
+    assert_eq!("2".to_string(), format!("{:?}", if_block));
 }
 
 #[test]
@@ -534,13 +531,13 @@ fn test_if_is_reduced_with_expression () {
 
 
     assert_eq!(true, if_block.is_reducible());
-    assert_eq!("if (1 < 2) [ 1 ] else [ 2 ]".to_string(), format!("{}", if_block));
+    assert_eq!("if (1 < 2) [ 1 ] else [ 2 ]".to_string(), format!("{:?}", if_block));
 
     let if_block = if_block.reduce(&mut env);
-    assert_eq!("if (true) [ 1 ] else [ 2 ]".to_string(), format!("{}", if_block));
+    assert_eq!("if (true) [ 1 ] else [ 2 ]".to_string(), format!("{:?}", if_block));
 
     let if_block = if_block.reduce(&mut env);
-    assert_eq!("1".to_string(), format!("{}", if_block));
+    assert_eq!("1".to_string(), format!("{:?}", if_block));
 }
 
 #[test]
@@ -552,10 +549,10 @@ fn test_if_without_else () {
 
 
     assert_eq!(true, if_block.is_reducible());
-    assert_eq!("if (true) [ 1 ] else [ do-nothing ]".to_string(), format!("{}", if_block));
+    assert_eq!("if (true) [ 1 ] else [ do-nothing ]".to_string(), format!("{:?}", if_block));
 
     let if_block = if_block.reduce(&mut env);
-    assert_eq!("1".to_string(), format!("{}", if_block));
+    assert_eq!("1".to_string(), format!("{:?}", if_block));
 }
 
 #[test]
@@ -607,12 +604,12 @@ fn test_while_loops () {
 
 
     assert_eq!(true, while_loop.is_reducible());
-    assert_eq!("while (x < 2) [ x = x + 1 ]".to_string(), format!("{}", while_loop));
+    assert_eq!("while (x < 2) [ x = x + 1 ]".to_string(), format!("{:?}", while_loop));
 
     let while_loop = while_loop.reduce(&mut env);
     assert_eq!(
         "if (x < 2) [ x = x + 1; while (x < 2) [ x = x + 1 ] ] else [ do-nothing ]".to_string(),
-        format!("{}", while_loop));
+        format!("{:?}", while_loop));
 }
 
 #[test]
